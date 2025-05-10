@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Clock Page Replacement Algorithm</title>
+  <style>
+    /* Style for the body to use Arial font and padding around content */
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    /* Style for each frame box: inline block with border, padding, margin, fixed width, and centered text */
+    .frame {
+      display: inline-block;
+      border: 2px solid black;
+      padding: 10px;
+      margin: 5px;
+      width: 60px;
+      text-align: center;
+    }
+    /* Highlighted frame with green border */
+    .highlight {
+      border-color: green;
+    }
+  </style>
+</head>
+<body>
+  <!-- Main heading for the Clock Page Replacement Simulator -->
+  <h2>Clock Page Replacement Simulator</h2>
+
+  <!-- Input label and text box for the page reference string, comma-separated -->
+  <label>Page Reference String (comma-separated):</label><br>
+  <input type="text" id="referenceString" value="1,2,3,4,1,2,5,1,2,3,4,5" size="50"><br><br>
+
+  <!-- Input label and number box for the number of frames -->
+  <label>Number of Frames:</label>
+  <input type="number" id="frameCount" value="3" min="1" max="10"><br><br>
+
+  <!-- Button to run the Clock Algorithm simulation -->
+  <button onclick="runClockAlgorithm()">Run Clock Algorithm</button>
+
+  <!-- Section to display the frames -->
+  <h3>Frames:</h3>
+  <div id="frames"></div>
+  <!-- Section to display the output log -->
+  <h3>Output:</h3>
+  <div id="output"></div>
+
+  <script>
+    // Function to run the Clock Page Replacement Algorithm simulation
+    function runClockAlgorithm() {
+      // Parse the reference string input into an array of numbers
+      const referenceString = document.getElementById("referenceString").value.split(',').map(Number);
+      // Parse the number of frames input as an integer
+      const frameCount = parseInt(document.getElementById("frameCount").value);
+      // Initialize frames array with null values representing empty frames
+      const frames = Array(frameCount).fill(null);
+      // Initialize use bits array with 0s for each frame
+      const useBit = Array(frameCount).fill(0);
+      // Pointer to track the current frame for replacement
+      let pointer = 0;
+      // String to accumulate output messages
+      let output = '';
+      // Counter for page faults
+      let pageFaults = 0;
+
+      // Clear the frames display area
+      document.getElementById("frames").innerHTML = '';
+
+      // Iterate over each page in the reference string with its step index
+      referenceString.forEach((page, step) => {
+        // Check if the page is already in one of the frames
+        let index = frames.indexOf(page);
+        if (index !== -1) {
+          // Page hit: set the use bit for the frame to 1
+          useBit[index] = 1;
+          // Log the page hit event
+          output += `Step ${step + 1}: Page ${page} already in frame. (HIT)<br>`;
+        } else {
+          // Page fault: find a frame to replace using the Clock algorithm
+          while (useBit[pointer] === 1) {
+            // Reset use bit to 0 and move pointer to next frame circularly
+            useBit[pointer] = 0;
+            pointer = (pointer + 1) % frameCount;
+          }
+          // Replace the page in the frame pointed by pointer
+          frames[pointer] = page;
+          // Set use bit for the new page to 1
+          useBit[pointer] = 1;
+          // Move pointer to next frame circularly
+          pointer = (pointer + 1) % frameCount;
+          // Increment page fault count
+          pageFaults++;
+          // Log the page fault and replacement event
+          output += `Step ${step + 1}: Page ${page} caused a page fault. Replacing frame.<br>`;
+        }
+
+        // Update the frame display with current pages and highlight frames with use bit 1
+        const frameDisplay = frames.map((f, i) =>
+          `<div class="frame ${useBit[i] === 1 ? 'highlight' : ''}">${f !== null ? f : '-'}</div>`
+        ).join('');
+        document.getElementById("frames").innerHTML = frameDisplay;
+      });
+
+      // Display the total number of page faults
+      output += `<br>Total Page Faults: ${pageFaults}`;
+      document.getElementById("output").innerHTML = output;
+    }
+  </script>
+</body>
+</html>
